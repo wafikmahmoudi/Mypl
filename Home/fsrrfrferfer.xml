@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="Home.fsrrfrferfer">
+<Super>%Persistent</Super>
+
+<UDLText name="T">
+<Category>error</Category>
+<Content><![CDATA[
+ w efe
+Class Home.fsrrfrferfer Extends %Persistent
+{
+w efe
+
+}
+]]></Content>
+</UDLText>
+</Class>
+</Export>

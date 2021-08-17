@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="Home.Controller2">
+<Super>%CSP.REST</Super>
+
+<Parameter name="HandleCorsRequest">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="CONTENTTYPE">
+<Default>application/json+fhir</Default>
+</Parameter>
+
+<XData name="UrlMap">
+<XMLNamespace>http://www.intersystems.com/urlmap</XMLNamespace>
+<Data><![CDATA[
+<Routes>
+          <Route Url="/" Method="GET" Call="ListPatients" />
+        </Routes>]]></Data>
+</XData>
+
+<Method name="ListPatients">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+        w "cttht"
+		Set tArr = []
+        Set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Patient where ID1=1051")
+        While rs.%Next() {
+        set idd = $LISTTOSTRING((rs.%Get("identifier")),"")
+        set pos = $FIND(rs.%Get("identifier"),"u")
+        set pos = pos-4
+        set idd = $EXTRACT(rs.%Get("identifier"),3,pos)
+        
+        set xx = $LISTTOSTRING((rs.%Get("identifier")),"")
+        set pos1 = $FIND(xx,"oid")
+        set pos1 = pos1+1
+        set pos2 = $FIND(xx,"|")
+        set uuid = $EXTRACT(xx,pos1,pos2-2)
+        
+        
+        set title1 = rs.%Get("gender")
+        if title1 = "male" 
+        {set title = "Mr" }
+        else
+        {set title = "Mme"}
+        
+      
+      //Patient 
+        Set rs2 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Patient where identifier Like'%"_idd_"%'")
+        While rs2.%Next() {
+         set id2 = rs2.%Get("Key")
+        }
+       
+       
+       //Observation anapath
+       
+        Set rs3 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Observation where patient = '"_id2_"' and codeValueConcept = 'height'")
+        While rs3.%Next() {
+         set height = rs3.%Get("codeValueQuantity")
+        }
+        Set rs3 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Observation where patient = '"_id2_"' and codeValueConcept = 'weight'")
+        While rs3.%Next() {
+         set weight = rs3.%Get("codeValueQuantity")
+         
+        }
+        Set rs3 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Observation where patient = '"_id2_"' and codeValueConcept = 'imc'")
+        While rs3.%Next() {
+         set imc = rs3.%Get("codeValueQuantity")
+        }
+        
+        
+        //Allergy
+         Set alg = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.AllergyIntolerance where patient = '"_id2_"'")
+        While alg.%Next() {
+         set datealg = alg.%Get("date")
+         set contentalg = alg.%Get("category")
+         set highlightalg = alg.%Get("verificationStatus")
+        }
+        
+        
+        //Question
+        Set qst = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Questionnaire where subjectType Like '%"_id2_"%'")
+        While qst.%Next() {
+         set codeqst = qst.%Get("code")
+        set codeqst = $LISTTOSTRING(codeqst,"")
+        set pos = $FIND(codeqst,"|")
+        set codeqst = $EXTRACT(codeqst,pos,*-0)
+      if codeqst = "COMORBIDITY"
+      {
+      set dateqst= qst.%Get("date")
+      set contentqst = qst.%Get("title")
+      set highlightqst = qst.%Get("status")			
+      
+      }
+       if codeqst '= "COMORBIDITY"
+      {
+      set contentqst2 = qst.%Get("description")
+      set textqst2 = qst.%Get("title")
+      set statusqst2 = qst.%Get("status")
+      
+      }
+        }
+        
+        //Familymemberhistory
+         Set fml = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.FamilyMemberHistory where patient = '"_id2_"'")
+        While fml.%Next() {
+         set datefml = fml.%Get("date")
+         set highlightfml = fml.%Get("status")
+        set contentfml = fml.%Get("relationship")
+        set contentfml = $LISTTOSTRING(contentfml,"")
+        set pos = $FIND(contentfml,"|")
+        set contentfml = $EXTRACT(contentfml,pos,*-0)
+        }
+        
+        //medical_proposal
+        Set mdl = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.MedicationRequest where patient = '"_id2_"'")
+        While mdl.%Next() {
+        set contentmdl = mdl.%Get("code")
+        set contentmdl = $LISTTOSTRING(contentmdl,"")
+        set pos = $FIND(contentmdl,"|")
+        set contentmdl = $EXTRACT(contentmdl,1,pos-2)
+        set pos2 = $FIND(contentmdl," ")
+        	set contentmdl = $EXTRACT(contentmdl,pos2,*-0)
+        	set colormdl = mdl.%Get("intent")
+        set textmdl = mdl.%Get("identifier")
+        set textmdl = $LISTTOSTRING(textmdl,"")
+        set pos = $FIND(textmdl,"|")
+        	set textmdl = $EXTRACT(textmdl,pos,*-0)
+         		}
+         		
+        //clinical data
+         Set cln = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.ClinicalImpression where patient = '"_id2_"'")
+        While cln.%Next() {
+        set textcln = cln.%Get("findingCode")
+         set textcln = $LISTTOSTRING(textcln,"")
+        set pos = $FIND(textcln,"|")
+        	set textcln = $EXTRACT(textcln,pos,*-0)
+        	set colorcln = cln.%Get("status")
+        
+        
+        }
+ 
+          Do tArr.%Push({
+          
+            "uuid":         (uuid),
+             "hospital_uuid" :  (uuid),
+            "title":         (title),
+            "name":       ($LISTTOSTRING((rs.%Get("given")),"")),
+            "family":   ($LISTTOSTRING((rs.%Get("family")),"")),
+            "zip_code":   ($LISTTOSTRING((rs.%Get("addressPostalcode")),"")),
+            "city":   ($LISTTOSTRING((rs.%Get("addressState")),"")), 
+            "age" : 25,
+            "height":       (height),
+            "weight":       (weight),
+            "imc":       (imc),
+            "anapath compte rendu" : (ACR),
+            "anapath description" : (AD),
+            "anapath conclusion" : (AC),
+            "anapath ADICAP" : (ADICAP),
+            "anapath valideur" : (AV),
+             "breast_cup": "C",
+             "ps": 33,
+             "prop1": "Suggest over.",
+             "prop2": "15",
+             "prop3": "Body break.",
+             "prop4": "Inside country.",
+             "prop5": "Book southern.",
+            "biology": [],
+            "medical_history": 
+              {
+                  "personal_history": [],
+                  "family_history": [
+                   {
+                   	"date": (datefml),
+                   	"content": (contentfml),
+                   	"highlight": "false"
+        			}
+                  
+                  ],
+                   "allergies_history":
+                   [
+                    {
+        "date": (datealg),
+          "content": ($LISTTOSTRING((contentalg),"")),
+          "highlight":  ($LISTTOSTRING((highlightalg),""))
+        }
+                   
+                   ] 
+              },
+         "comorbidities": [
+        {
+      "date": (dateqst),
+      "content": (contentqst),
+      "highlight": "false"
+        }],
+          "lifestyle": [],
+          "scores": {
+          
+          },
+       "history_of_disease": "",
+         "model_2D": [],
+       "question_asked": {
+        	"content": (contentqst2),
+       		"tags": [
+       					{
+       					"text": (textqst2),
+       					"color": "BLUE"
+        				}
+        				]
+        
+        },
+         "medical_proposal": [(contentmdl)],
+         "treatments": [
+         		{
+         			 "text": (textmdl),
+         			 "color": "BLUE"
+         		}
+    					],
+    	"clinical_trials_options": [
+    			{
+    			"text": (textcln),
+    			"color": "BLUE"
+    	
+    			}
+    	
+    	
+    								],
+    			"complexity": "SIMPLE"
+              
+          })
+        }
+
+        Write tArr.%ToJSON()
+        Quit $$$OK
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Category>error</Category>
+<Content><![CDATA[
+
+Class Home.Controller2 Extends %CSP.REST
+{
+]]></Content>
+</UDLText>
+
+<Parameter name="HandleCorsRequest">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="CONTENTTYPE">
+<Default>application/json+fhir</Default>
+</Parameter>
+
+<XData name="UrlMap">
+<XMLNamespace>http://www.intersystems.com/urlmap</XMLNamespace>
+<Data><![CDATA[
+<Routes>
+          <Route Url="/" Method="GET" Call="ListPatients" />
+        </Routes>]]></Data>
+</XData>
+
+<Method name="ListPatients">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+        w "cttt"
+		Set tArr = []
+        Set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Patient where ID1=1051")
+        While rs.%Next() {
+        set idd = $LISTTOSTRING((rs.%Get("identifier")),"")
+        set pos = $FIND(rs.%Get("identifier"),"u")
+        set pos = pos-4
+        set idd = $EXTRACT(rs.%Get("identifier"),3,pos)
+        
+        set xx = $LISTTOSTRING((rs.%Get("identifier")),"")
+        set pos1 = $FIND(xx,"oid")
+        set pos1 = pos1+1
+        set pos2 = $FIND(xx,"|")
+        set uuid = $EXTRACT(xx,pos1,pos2-2)
+        
+        
+        set title1 = rs.%Get("gender")
+        if title1 = "male" 
+        {set title = "Mr" }
+        else
+        {set title = "Mme"}
+        
+      
+      //Patient 
+        Set rs2 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Patient where identifier Like'%"_idd_"%'")
+        While rs2.%Next() {
+         set id2 = rs2.%Get("Key")
+        }
+       
+       
+       //Observation anapath
+       
+        Set rs3 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Observation where patient = '"_id2_"' and codeValueConcept = 'height'")
+        While rs3.%Next() {
+         set height = rs3.%Get("codeValueQuantity")
+        }
+        Set rs3 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Observation where patient = '"_id2_"' and codeValueConcept = 'weight'")
+        While rs3.%Next() {
+         set weight = rs3.%Get("codeValueQuantity")
+         
+        }
+        Set rs3 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Observation where patient = '"_id2_"' and codeValueConcept = 'imc'")
+        While rs3.%Next() {
+         set imc = rs3.%Get("codeValueQuantity")
+        }
+        
+        
+        //Allergy
+         Set alg = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.AllergyIntolerance where patient = '"_id2_"'")
+        While alg.%Next() {
+         set datealg = alg.%Get("date")
+         set contentalg = alg.%Get("category")
+         set highlightalg = alg.%Get("verificationStatus")
+        }
+        
+        
+        //Question
+        Set qst = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.Questionnaire where subjectType Like '%"_id2_"%'")
+        While qst.%Next() {
+         set codeqst = qst.%Get("code")
+        set codeqst = $LISTTOSTRING(codeqst,"")
+        set pos = $FIND(codeqst,"|")
+        set codeqst = $EXTRACT(codeqst,pos,*-0)
+      if codeqst = "COMORBIDITY"
+      {
+      set dateqst= qst.%Get("date")
+      set contentqst = qst.%Get("title")
+      set highlightqst = qst.%Get("status")			
+      
+      }
+       if codeqst '= "COMORBIDITY"
+      {
+      set contentqst2 = qst.%Get("description")
+      set textqst2 = qst.%Get("title")
+      set statusqst2 = qst.%Get("status")
+      
+      }
+        }
+        
+        //Familymemberhistory
+         Set fml = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.FamilyMemberHistory where patient = '"_id2_"'")
+        While fml.%Next() {
+         set datefml = fml.%Get("date")
+         set highlightfml = fml.%Get("status")
+        set contentfml = fml.%Get("relationship")
+        set contentfml = $LISTTOSTRING(contentfml,"")
+        set pos = $FIND(contentfml,"|")
+        set contentfml = $EXTRACT(contentfml,pos,*-0)
+        }
+        
+        //medical_proposal
+        Set mdl = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.MedicationRequest where patient = '"_id2_"'")
+        While mdl.%Next() {
+        set contentmdl = mdl.%Get("code")
+        set contentmdl = $LISTTOSTRING(contentmdl,"")
+        set pos = $FIND(contentmdl,"|")
+        set contentmdl = $EXTRACT(contentmdl,1,pos-2)
+        set pos2 = $FIND(contentmdl," ")
+        	set contentmdl = $EXTRACT(contentmdl,pos2,*-0)
+        	set colormdl = mdl.%Get("intent")
+        set textmdl = mdl.%Get("identifier")
+        set textmdl = $LISTTOSTRING(textmdl,"")
+        set pos = $FIND(textmdl,"|")
+        	set textmdl = $EXTRACT(textmdl,pos,*-0)
+         		}
+         		
+        //clinical data
+         Set cln = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_I0001_S.ClinicalImpression where patient = '"_id2_"'")
+        While cln.%Next() {
+        set textcln = cln.%Get("findingCode")
+         set textcln = $LISTTOSTRING(textcln,"")
+        set pos = $FIND(textcln,"|")
+        	set textcln = $EXTRACT(textcln,pos,*-0)
+        	set colorcln = cln.%Get("status")
+        
+        
+        }
+ 
+          Do tArr.%Push({
+          
+            "uuid":         (uuid),
+             "hospital_uuid" :  (uuid),
+            "title":         (title),
+            "name":       ($LISTTOSTRING((rs.%Get("given")),"")),
+            "family":   ($LISTTOSTRING((rs.%Get("family")),"")),
+            "zip_code":   ($LISTTOSTRING((rs.%Get("addressPostalcode")),"")),
+            "city":   ($LISTTOSTRING((rs.%Get("addressState")),"")), 
+            "age" : 25,
+            "height":       (height),
+            "weight":       (weight),
+            "imc":       (imc),
+            "anapath compte rendu" : (ACR),
+            "anapath description" : (AD),
+            "anapath conclusion" : (AC),
+            "anapath ADICAP" : (ADICAP),
+            "anapath valideur" : (AV),
+             "breast_cup": "C",
+             "ps": 33,
+             "prop1": "Suggest over.",
+             "prop2": "15",
+             "prop3": "Body break.",
+             "prop4": "Inside country.",
+             "prop5": "Book southern.",
+            "biology": [],
+            "medical_history": 
+              {
+                  "personal_history": [],
+                  "family_history": [
+                   {
+                   	"date": (datefml),
+                   	"content": (contentfml),
+                   	"highlight": "false"
+        			}
+                  
+                  ],
+                   "allergies_history":
+                   [
+                    {
+        "date": (datealg),
+          "content": ($LISTTOSTRING((contentalg),"")),
+          "highlight":  ($LISTTOSTRING((highlightalg),""))
+        }
+                   
+                   ] 
+              },
+         "comorbidities": [
+        {
+      "date": (dateqst),
+      "content": (contentqst),
+      "highlight": "false"
+        }],
+          "lifestyle": [],
+          "scores": {
+          
+          },
+       "history_of_disease": "",
+         "model_2D": [],
+       "question_asked": {
+        	"content": (contentqst2),
+       		"tags": [
+       					{
+       					"text": (textqst2),
+       					"color": "BLUE"
+        				}
+        				]
+        
+        },
+         "medical_proposal": [(contentmdl)],
+         "treatments": [
+         		{
+         			 "text": (textmdl),
+         			 "color": "BLUE"
+         		}
+    					],
+    	"clinical_trials_options": [
+    			{
+    			"text": (textcln),
+    			"color": "BLUE"
+    	
+    			}
+    	
+    	
+    								],
+    			"complexity": "SIMPLE"
+              
+          })
+        }
+
+        Write tArr.%ToJSON()
+        Quit $$$OK
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Category>error</Category>
+<Content><![CDATA[
+
+}
+]]></Content>
+</UDLText>
+</Class>
+</Export>
