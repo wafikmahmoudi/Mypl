@@ -1,0 +1,1000 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2021.1 (Build 215U)" ts="2021-09-01 15:22:14">
+<Class name="AmazonSQS.Processus">
+<Description>
+</Description>
+<Super>Ens.BusinessProcessBPL</Super>
+<TimeChanged>65973,53179.810337</TimeChanged>
+<TimeCreated>65973,49666.987837</TimeCreated>
+
+<XData name="BPL">
+<Description>
+BPL Definition</Description>
+<XMLNamespace>http://www.intersystems.com/bpl</XMLNamespace>
+<Data><![CDATA[
+<process language='objectscript' request='Ens.Request' response='Ens.Response' height='2000' width='2000' >
+<context>
+<property name='Json' type='%String' instantiate='0' >
+<parameters>
+<parameter name='MAXLEN'  value='500000' />
+</parameters>
+</property>
+</context>
+<sequence xend='200' yend='450' >
+<code xpos='200' ypos='250' >
+<![CDATA[
+ $$$LOGINFO("helloo")
+  set Json = {"glossary":{"title":"example wafik2","GlossDiv":{"title":"S","GlossList":{"GlossEntry":{"ID":"123","SortAs":"456","GlossTerm":"Standard Gfffff","Acronym":"SfffffGML","Abbrev":"ISO 8879:1986","GlossDef":{"para":"A meta-markuvfdsvdfvdsate markup languages such as DocBook.","GlossSeeAlso":["GML","XML"]},"GlossSee":"markup"}}}}}
+	    
+ set myPatient = Json.%ToJSON() ]]]]><![CDATA[>
+</code>
+<call name='appel operation AmazonSQS' target='Grongier.AmazonSQS.Operation' async='1' xpos='200' ypos='350' >
+<request type='Grongier.AmazonSQS.Message' >
+<assign property="callrequest.Key" value="&quot;Key&quot;" action="set" />
+<assign property="callrequest.Value" value="&quot;Value&quot;" action="set" />
+<assign property="callrequest.Type" value="&quot;String&quot;" action="set" />
+<assign property="callrequest.Body" value="myPatient" action="set" />
+</request>
+<response type='Ens.Response' />
+</call>
+</sequence>
+</process>
+]]></Data>
+</XData>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+</Storage>
+</Class>
+
+
+<Class name="AmazonSQS.Service">
+<Super>Ens.BusinessService</Super>
+<TimeChanged>65988,54781.000184079</TimeChanged>
+<TimeCreated>65973,51064.66686</TimeCreated>
+
+<Parameter name="ADAPTER">
+<Default>Ens.InboundAdapter</Default>
+</Parameter>
+
+<Parameter name="SETTINGS">
+<Default>TargetP</Default>
+</Parameter>
+
+<Property name="TargetP">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="1000"/>
+</Property>
+
+<Method name="OnProcessInput">
+<FormalSpec>pInput:%RegisteredObject,pOutput:%RegisteredObject</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+		$$$LOGINFO("wafik 1 ")
+		
+		
+		
+		/*******************************************************/
+		Set tArr = []
+        
+        Set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT top 1 * FROM HSFHIR_X0001_S.Patient where identifier like '%22081990%' order by _lastUpdated desc")
+        While rs.%Next() {
+        set key1 = rs.%Get("Key")
+        //w key1
+        set idd = $LISTTOSTRING((rs.%Get("identifier")),"")
+        set pos = $FIND(rs.%Get("identifier"),"u")
+        set pos = pos-4
+        set idd = $EXTRACT(rs.%Get("identifier"),3,pos)
+        
+        set xx = $LISTTOSTRING((rs.%Get("identifier")),"")
+        set pos1 = $FIND(xx,"oid")
+        set pos1 = pos1+1
+        set pos2 = $FIND(xx,"|")
+        set uuid = $EXTRACT(xx,pos1,pos2-2)
+        
+        
+        set title1 = rs.%Get("gender")
+        if title1 = "male" 
+        {set title = "Mr" }
+        else
+        {set title = "Mme"}
+        
+      
+      //Patient 
+   
+        Set rs2 = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_X0001_S.Patient where Key ='"_key1_"'")
+     
+        While rs2.%Next() {
+         set id2 = rs2.%Get("Key")
+        }
+       
+       
+       //Observation
+       set arrO1 = []
+        set arrO2 = []
+         set arrO3 = []
+          set arrO4 = []
+       set i = 0
+      
+       Set rs3 = ##class(%SQL.Statement).%ExecDirect(,"SELECT O.code as code, GetProp(ResourceString,'valueString') as valueString, O.status as status FROM HSFHIR_X0001_S.Observation O Join HSFHIR_X0001_R.Rsrc R on O.Key = R.Key where O.patient like '%22081990%'")
+     //DO rs3.%Display()
+        While rs3.%Next() {
+        //w i
+           set code1 = rs3.%GetData(1)
+           set valueString1 = rs3.%GetData(2)
+           set status1 = rs3.%GetData(3)
+           //w status1
+           set arrO1(i) = code1
+           set arrO2(i) = valueString1
+           set arrO3(i) = status1
+            //set arrO4(i) = rs3.%Get("code")
+         set i = i+1
+        }
+
+        
+
+
+
+        //Allergy
+         Set alg = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_X0001_S.AllergyIntolerance where patient = '"_id2_"'")
+        While alg.%Next() {
+         set datealg = alg.%Get("date")
+         set contentalg = alg.%Get("category")
+         set highlightalg = alg.%Get("verificationStatus")
+        }
+        
+        
+        //Question
+        Set qst = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_X0001_S.Questionnaire where subjectType Like '%"_id2_"%'")
+        While qst.%Next() {
+         set codeqst = qst.%Get("code")
+        set codeqst = $LISTTOSTRING(codeqst,"")
+        set pos = $FIND(codeqst,"|")
+        set codeqst = $EXTRACT(codeqst,pos,*-0)
+      if codeqst = "COMORBIDITY"
+      {
+      set dateqst= qst.%Get("date")
+      set contentqst = qst.%Get("title")
+      set highlightqst = qst.%Get("status")			
+      
+      }
+       if codeqst '= "COMORBIDITY"
+      {
+      set contentqst2 = qst.%Get("description")
+      set textqst2 = qst.%Get("title")
+      set statusqst2 = qst.%Get("status")
+      
+      }
+        }
+        
+        //Familymemberhistory
+         Set fml = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_X0001_S.FamilyMemberHistory where patient = '"_id2_"'")
+        While fml.%Next() {
+         set datefml = fml.%Get("date")
+         set highlightfml = fml.%Get("status")
+        set contentfml = fml.%Get("relationship")
+        set contentfml = $LISTTOSTRING(contentfml,"")
+        set pos = $FIND(contentfml,"|")
+        set contentfml = $EXTRACT(contentfml,pos,*-0)
+        }
+        
+        //medical_proposal
+        Set mdl = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_X0001_S.MedicationRequest where patient = '"_id2_"'")
+        While mdl.%Next() {
+        set contentmdl = mdl.%Get("code")
+        set contentmdl = $LISTTOSTRING(contentmdl,"")
+        set pos = $FIND(contentmdl,"|")
+        set contentmdl = $EXTRACT(contentmdl,1,pos-2)
+        set pos2 = $FIND(contentmdl," ")
+        	set contentmdl = $EXTRACT(contentmdl,pos2,*-0)
+        	set colormdl = mdl.%Get("intent")
+        set textmdl = mdl.%Get("identifier")
+        set textmdl = $LISTTOSTRING(textmdl,"")
+        set pos = $FIND(textmdl,"|")
+        	set textmdl = $EXTRACT(textmdl,pos,*-0)
+         		}
+         		
+        //clinical data
+         Set cln = ##class(%SQL.Statement).%ExecDirect(,"SELECT* FROM HSFHIR_X0001_S.ClinicalImpression where patient = '"_id2_"'")
+        While cln.%Next() {
+        set textcln = cln.%Get("findingCode")
+         set textcln = $LISTTOSTRING(textcln,"")
+        set pos = $FIND(textcln,"|")
+        	set textcln = $EXTRACT(textcln,pos,*-0)
+        	set colorcln = cln.%Get("status")
+        
+        
+        }
+ 
+         
+         
+       
+   
+   
+       set array = [] 
+		 set x =0
+		 while (x<i)
+		 {
+		 set json2 ={}
+		 set cr = arrO1(x)_""
+		 set cr = $LISTTOSTRING(arrO1(x),"")
+	
+		 set json2.anapathcompterendu= cr
+	
+		 //set re = arrO2(x)_""
+		 //set re2 = $LISTTOSTRING(re,"")
+	     set json2.anapathdescription = arrO2(x)
+	     set json2.anapathconclusion =arrO3(x)
+	     set json2.anapathADICAP = ""
+	     set json2.anapathvalideur = ""
+	     
+	     do array.%Push(json2)
+	     SET x=x+1
+	     }
+
+         
+         
+         
+ 
+          Do tArr.%Push({
+          
+            "uuid":         (uuid),
+             "hospital_uuid" :  (uuid),
+            "title":         (title),
+            "name":       ($LISTTOSTRING((rs.%Get("given")),"")),
+            "family":   ($LISTTOSTRING((rs.%Get("family")),"")),
+            "zip_code":   ($LISTTOSTRING((rs.%Get("addressPostalcode")),"")),
+            "city":   ($LISTTOSTRING((rs.%Get("addressState")),"")), 
+            "age" : 25,
+            "height":       ("height"),
+            "weight":       ("weight"),
+            "imc":       ("imc"),
+            "Observation" : (array),
+             "breast_cup": "C",
+             "ps": 33,
+             "prop1": "Suggest over.",
+             "prop2": "15",
+             "prop3": "Body break.",
+             "prop4": "Inside country.",
+             "prop5": "Book southern.",
+            "biology": [],
+            "medical_history": 
+              {
+                  "personal_history": [],
+                  "family_history": [
+                   {
+                   	"date": ("datefml"),
+                   	"content": ("contentfml"),
+                   	"highlight": "false"
+        			}
+                  
+                  ],
+                   "allergies_history":
+                   [
+                    {
+        "date": ("datealg"),
+          "content": (""),
+          "highlight":  ("")
+        }
+                   
+                   ] 
+              },
+         "comorbidities": [
+        {
+      "date": ("dateqst"),
+      "content": ("ontentqst"),
+      "highlight": "false"
+        }],
+          "lifestyle": [],
+          "scores": {
+          
+          },
+       "history_of_disease": "",
+         "model_2D": [],
+       "question_asked": {
+        	"content": ("contentqst2"),
+       		"tags": [
+       					{
+       					"text": ("textqst2"),
+       					"color": "BLUE"
+        				}
+        				]
+        
+        },
+         "medical_proposal": [("contentmdl")],
+         "treatments": [
+         		{
+         			 "text": ("textmdl"),
+         			 "color": "BLUE"
+         		}
+    					],
+    	"clinical_trials_options": [
+    			{
+    			"text": ("textcln"),
+    			"color": "BLUE"
+    	
+    			}
+    	
+    	
+    								],
+    			"complexity": "SIMPLE"
+              
+          })
+        }
+
+        //Write tArr.%ToJSON()
+		/*******************************************************/
+		set pr=##class(Grongier.AmazonSQS.Message).%New()
+	    set pr.Key = "Key"
+	    set pr.Value ="Value"
+	    set pr.Type = "String"
+	    set Json = {"glossary":{"title":"example wafik4","GlossDiv":{"title":"S","GlossList":{"GlossEntry":{"ID":"123","SortAs":"456","GlossTerm":"Standard Gfffff","Acronym":"SfffffGML","Abbrev":"ISO 8879:1986","GlossDef":{"para":"A meta-markuvfdsvdfvdsate markup languages such as DocBook.","GlossSeeAlso":["GML","XML"]},"GlossSee":"markup"}}}}}
+	    set pr.Body = tArr.%ToJSON()
+	    set sc=..SendRequestSync("Grongier.AmazonSQS.Operation",pr)
+	    Hang 100
+	    quit 1
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Project name="EnsExportProduction_2021-09-01 15-15-14_679+0" LastModified="2021-09-01 15:22:14.184288">
+  <ProjectDescription>Studio Project generated from Production 'MYPLDEVPKG.FoundationProduction' at 2021-09-01 15:15:14.679 UTC</ProjectDescription>
+  <Items>
+    <ProjectItem name="AmazonSQS.Processus" type="CLS"></ProjectItem>
+    <ProjectItem name="AmazonSQS.Service" type="CLS"></ProjectItem>
+    <ProjectItem name="Grongier.AmazonSQS.Message" type="CLS"></ProjectItem>
+    <ProjectItem name="Grongier.AmazonSQS.Operation" type="CLS"></ProjectItem>
+    <ProjectItem name="Grongier.AmazonSQS.OutboundAdapter" type="CLS"></ProjectItem>
+    <ProjectItem name="dc.Demo.EmailOperation" type="CLS"></ProjectItem>
+    <ProjectItem name="dc.Demo.FileOperation" type="CLS"></ProjectItem>
+    <ProjectItem name="dc.Demo.FilterPostsRoutingRule" type="CLS"></ProjectItem>
+    <ProjectItem name="dc.Demo.PostMessage" type="CLS"></ProjectItem>
+    <ProjectItem name="dc.Demo.RedditService" type="CLS"></ProjectItem>
+    <ProjectItem name="dc.Reddit.InboundAdapter" type="CLS"></ProjectItem>
+    <ProjectItem name="dc.Reddit.Post" type="CLS"></ProjectItem>
+    <ProjectItem name="Settings:AmazonSQS.Processus.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="Settings:AmazonSQS.Service.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="Settings:FilterPosts.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="Settings:Grongier.AmazonSQS.Operation.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="Settings:dc.Demo.EmailOperation.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="Settings:dc.Demo.FileOperation.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="Settings:dc.Demo.RedditService.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="EnsExportNotes.EnsExportProduction_2021-09-01 15-15-14_679+0.PTD" type="PTD"></ProjectItem>
+  </Items>
+</Project>
+
+
+<Class name="Grongier.AmazonSQS.Message">
+<Language>objectscript</Language>
+<Super>Ens.Request</Super>
+<TimeChanged>65972,48961.349696</TimeChanged>
+<TimeCreated>65972,48961.349696</TimeCreated>
+
+<Property name="Body">
+<Type>%String</Type>
+<Required>1</Required>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="Key">
+<Type>%String</Type>
+<Required>1</Required>
+</Property>
+
+<Property name="Value">
+<Type>%String</Type>
+<Required>1</Required>
+</Property>
+
+<Property name="Type">
+<Type>%String</Type>
+<Required>1</Required>
+</Property>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DefaultData>MessageDefaultData1</DefaultData>
+<Data name="MessageDefaultData1">
+<Subscript>"Message1"</Subscript>
+<Value name="1">
+<Value>Body</Value>
+</Value>
+<Value name="2">
+<Value>Key</Value>
+</Value>
+<Value name="3">
+<Value>Value</Value>
+</Value>
+<Value name="4">
+<Value>Type</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Class name="Grongier.AmazonSQS.Operation">
+<Super>EnsLib.PEX.BusinessOperation</Super>
+<TimeChanged>65972,48961.253321</TimeChanged>
+<TimeCreated>65972,48961.253321</TimeCreated>
+
+<Parameter name="ADAPTER">
+<Default>Grongier.AmazonSQS.OutboundAdapter</Default>
+</Parameter>
+
+<Parameter name="SETTINGS">
+<Default>-%gatewayName,-%gatewayHost,-%gatewayPort,-%gatewayTimeout,-%gatewayExtraClasspaths,-%remoteClassname,-%remoteSettings</Default>
+</Parameter>
+
+<Property name="Adapter">
+<Type>Grongier.AmazonSQS.OutboundAdapter</Type>
+</Property>
+
+<Parameter name="INVOCATION">
+<Default>Queue</Default>
+</Parameter>
+
+<Property name="%gatewayName">
+<Description>
+External Language Server Name. Once specified, it supersedes the settings in Gateway Host and Gateway Port.
+Using External Language Server is preferred over Gateway Host and Gateway Port.</Description>
+<Type>%String</Type>
+<Internal>1</Internal>
+<InitialExpression>"%Java Server"</InitialExpression>
+</Property>
+
+<Property name="%gatewayExtraClasspaths">
+<Description>
+One or more Classpaths (separated by '|' character) needed in addition to the ones configured in the Java Gateway Service</Description>
+<Type>%String</Type>
+<InitialExpression>"$$IRISHOME/dev/java/lib/JDK18/intersystems-amazonSQS-0.0.1-jar-with-dependencies.jar"</InitialExpression>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="%remoteClassname">
+<Type>%String</Type>
+<Internal>1</Internal>
+<InitialExpression>"com.intersystems.amazon.SQSOperation"</InitialExpression>
+<Parameter name="MAXLEN"/>
+</Property>
+</Class>
+
+
+<Class name="Grongier.AmazonSQS.OutboundAdapter">
+<Super>EnsLib.PEX.OutboundAdapter</Super>
+<TimeChanged>65972,48961.449358</TimeChanged>
+<TimeCreated>65972,48961.449358</TimeCreated>
+
+<Parameter name="SETTINGS">
+<Default>-%useHostConnection,-%gatewayName,-%gatewayHost,-%gatewayPort,-%gatewayTimeout,-%gatewayExtraClasspaths,-%remoteClassname,-%remoteSettings,SQSCredentials:Basic:credentialsSelector,Region:AmazonSQS Settings,Queue:AmazonSQS Settings,GroupID:AmazonSQS Settings,DeduplicationID:AmazonSQS Settings</Default>
+</Parameter>
+
+<Property name="%useHostConnection">
+<Description>
+Use Host Connection. If set to true, this adapter will use the connection from the host.</Description>
+<Type>%Boolean</Type>
+<Internal>1</Internal>
+<InitialExpression>1</InitialExpression>
+</Property>
+
+<Property name="%gatewayExtraClasspaths">
+<Description>
+One or more Classpaths (separated by '|' character) needed in addition to the ones configured in the Java Gateway Service</Description>
+<Type>%String</Type>
+<InitialExpression>"$$IRISHOME/dev/java/lib/JDK18/intersystems-amazonSQS-0.0.1-jar-with-dependencies.jar"</InitialExpression>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="%remoteClassname">
+<Type>%String</Type>
+<Internal>1</Internal>
+<InitialExpression>"com.intersystems.amazon.SQSOutboundAdapter"</InitialExpression>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="Region">
+<Type>%String</Type>
+<InitialExpression>"us-east-2"</InitialExpression>
+<Required>1</Required>
+</Property>
+
+<Property name="Queue">
+<Type>%String</Type>
+<Required>1</Required>
+</Property>
+
+<Property name="GroupID">
+<Type>%String</Type>
+</Property>
+
+<Property name="DeduplicationID">
+<Type>%String</Type>
+</Property>
+
+<Property name="SQSCredentials">
+<Description>
+This is the ID name of the set of credentials values (Username, Password) to be used to access the SQS server</Description>
+<Type>%String</Type>
+<InitialExpression>"None"</InitialExpression>
+</Property>
+
+<Method name="OnInit">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set cSC = ##Class(Ens.Config.Credentials).GetCredentialsObj(.credentialsObj,$classname($this),"Ens.Config.Credentials",..SQSCredentials) quit:$$$ISERR(cSC)
+	set ..%remoteSettings=..%remoteSettings_$char(10)_"ACCESSKEY="_credentialsObj.Username_$char(10)_"SECRETKEY="_credentialsObj.Password_$char(10)_"REGION="_..Region_$char(10)_"QUEUE="_..Queue_$char(10)_"GROUPID="_..GroupID_$char(10)_"DEDUPLICATIONID="_..DeduplicationID
+	set tSC = ##super()
+	return tSC
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="dc.Demo.EmailOperation">
+<Super>Ens.BusinessOperation</Super>
+<TimeChanged>65972,48960.714053</TimeChanged>
+<TimeCreated>65972,48960.714053</TimeCreated>
+
+<Property name="Adapter">
+<Type>EnsLib.EMail.OutboundAdapter</Type>
+</Property>
+
+<Parameter name="ADAPTER">
+<Default>EnsLib.EMail.OutboundAdapter</Default>
+</Parameter>
+
+<Parameter name="INVOCATION">
+<Default>Queue</Default>
+</Parameter>
+
+<Method name="SendEmail">
+<FormalSpec>pRequest:dc.Demo.PostMessage,*pResponse:Ens.Response</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    #dim mailMessage as %Net.MailMessage
+    Set mailMessage = ##class(%Net.MailMessage).%New()
+    Set mailMessage.Subject = pRequest.Found_" found"
+    Do ..Adapter.AddRecipients(mailMessage,pRequest.ToEmailAddress)
+    Set mailMessage.Charset="UTF-8"
+
+    Set (title,author,url) = ""
+    If ($IsObject(pRequest.Post)) {
+        Set title = pRequest.Post.title
+        Set author = pRequest.Post.author
+        Set url = pRequest.Post.url
+    }
+    Do mailMessage.TextData.WriteLine("More info:")
+    Do mailMessage.TextData.WriteLine("Title: "_title)
+    Do mailMessage.TextData.WriteLine("Author: "_author)
+    Do mailMessage.TextData.WriteLine("URL: "_url)
+    Return ..Adapter.SendMail(mailMessage)
+]]></Implementation>
+</Method>
+
+<XData name="MessageMap">
+<Data><![CDATA[
+<MapItems>
+    <MapItem MessageType="dc.Demo.PostMessage">
+        <Method>SendEmail</Method>
+    </MapItem>
+</MapItems>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="dc.Demo.FileOperation">
+<Super>Ens.BusinessOperation</Super>
+<TimeChanged>65972,48960.697392</TimeChanged>
+<TimeCreated>65972,48960.697392</TimeCreated>
+
+<Property name="Adapter">
+<Type>EnsLib.File.OutboundAdapter</Type>
+</Property>
+
+<Parameter name="ADAPTER">
+<Default>EnsLib.File.OutboundAdapter</Default>
+</Parameter>
+
+<Parameter name="INVOCATION">
+<Default>Queue</Default>
+</Parameter>
+
+<Method name="WriteToFile">
+<FormalSpec>pRequest:dc.Demo.PostMessage,*pResponse:Ens.Response</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    Set (ts, title, author, url, text) = ""
+    If ($IsObject(pRequest.Post)) {
+        Set title = pRequest.Post.Title
+        Set author = pRequest.Post.Author
+        Set url = pRequest.Post.Url
+        Set text = pRequest.Post.Selftext
+        Set ts = ##class(%Library.PosixTime).LogicalToOdbc(##class(%Library.PosixTime).UnixTimeToLogical(pRequest.Post.CreatedUTC))
+    }
+    Set line = ts_" : "_title_" : "_author_" : "_url
+    Set filename = pRequest.Found_".txt" 
+    $$$QuitOnError(..Adapter.PutLine(filename, line))
+    $$$QuitOnError(..Adapter.PutLine(filename, ""))
+    $$$QuitOnError(..Adapter.PutLine(filename, text))
+    $$$QuitOnError(..Adapter.PutLine(filename, " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"))
+    Return $$$OK
+]]></Implementation>
+</Method>
+
+<XData name="MessageMap">
+<Data><![CDATA[
+<MapItems>
+    <MapItem MessageType="dc.Demo.PostMessage">
+        <Method>WriteToFile</Method>
+    </MapItem>
+</MapItems>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="dc.Demo.FilterPostsRoutingRule">
+<Description>
+</Description>
+<Super>Ens.Rule.Definition</Super>
+<TimeChanged>65972,48960.571838</TimeChanged>
+<TimeCreated>65972,48960.571838</TimeCreated>
+
+<Parameter name="RuleAssistClass">
+<Default>EnsLib.MsgRouter.RuleAssist</Default>
+</Parameter>
+
+<XData name="RuleDefinition">
+<XMLNamespace>http://www.intersystems.com/rule</XMLNamespace>
+<Data><![CDATA[
+<ruleDefinition alias="" context="EnsLib.MsgRouter.RoutingEngine" production="dc.Demo.Production">
+<ruleSet name="" effectiveBegin="" effectiveEnd="">
+<rule name="">
+<constraint name="msgClass" value="dc.Demo.PostMessage"></constraint>
+<when condition="ToUpper(Document.Post.Selftext) Contains ToUpper(&quot;dog&quot;)">
+<assign property="Document.ToEmailAddress" value="&quot;dog@company.com&quot;"></assign>
+<assign property="Document.Found" value="&quot;Dog&quot;"></assign>
+<send transform="" target="dc.Demo.FileOperation"></send>
+<return></return>
+</when>
+<when condition="ToUpper(Document.Post.Selftext) Contains ToUpper(&quot;cat&quot;)">
+<assign property="Document.ToEmailAddress" value="&quot;cat@company.com&quot;"></assign>
+<assign property="Document.Found" value="&quot;Cat&quot;"></assign>
+<send transform="" target="dc.Demo.FileOperation"></send>
+<return></return>
+</when>
+<otherwise>
+<return></return>
+</otherwise>
+</rule>
+</ruleSet>
+</ruleDefinition>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="dc.Demo.PostMessage">
+<Super>Ens.Request</Super>
+<TimeChanged>65972,48960.797092</TimeChanged>
+<TimeCreated>65972,48960.797092</TimeCreated>
+
+<Property name="ToEmailAddress">
+<Type>%String</Type>
+</Property>
+
+<Property name="Found">
+<Type>%String</Type>
+</Property>
+
+<Property name="Post">
+<Type>dc.Reddit.Post</Type>
+</Property>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DefaultData>PostMessageDefaultData</DefaultData>
+<Data name="PostMessageDefaultData">
+<Subscript>"PostMessage"</Subscript>
+<Value name="1">
+<Value>ToEmailAddress</Value>
+</Value>
+<Value name="2">
+<Value>Post</Value>
+</Value>
+<Value name="3">
+<Value>Found</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Class name="dc.Demo.RedditService">
+<Super>Ens.BusinessService</Super>
+<TimeChanged>65972,48961.235368</TimeChanged>
+<TimeCreated>65972,48961.235368</TimeCreated>
+
+<Property name="Adapter">
+<Type>dc.Reddit.InboundAdapter</Type>
+</Property>
+
+<Parameter name="ADAPTER">
+<Default>dc.Reddit.InboundAdapter</Default>
+</Parameter>
+
+<Method name="OnProcessInput">
+<FormalSpec>pInput:dc.Reddit.Post,pOutput:%RegisteredObject</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    Set msg = ##class(dc.Demo.PostMessage).%New()
+    Set msg.Post = pInput
+    Return ..SendRequestAsync("FilterPosts",msg)
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="dc.Reddit.InboundAdapter">
+<Super>Ens.InboundAdapter</Super>
+<TimeChanged>65972,48961.559328</TimeChanged>
+<TimeCreated>65972,48961.559328</TimeCreated>
+
+<Property name="LastPostName">
+<Type>%String</Type>
+</Property>
+
+<Property name="SSLConfig">
+<Type>%String</Type>
+</Property>
+
+<Parameter name="SERVER">
+<Default>www.reddit.com</Default>
+</Parameter>
+
+<Property name="Feed">
+<Type>%String</Type>
+</Property>
+
+<Property name="Limit">
+<Description>
+how many messages to receive per request</Description>
+<Type>%Integer</Type>
+</Property>
+
+<Parameter name="SETTINGS">
+<Default>SSLConfig:Connection:sslConfigSelector,Feed:Connection,Limit:Connection</Default>
+</Parameter>
+
+<Method name="OnInit">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    If (..SSLConfig = "") {
+        return $$$ERROR(5001, "SSLConfig required")
+    }
+    If (..Feed="") { 
+        Set ..Feed = "/new/"
+    }
+    Set ..LastPostName = ""
+    
+    Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="OnTask">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    $$$TRACE("LIMIT:"_..Limit)
+    If ((..SSLConfig="") || (..Feed="")) {
+        Return $$$OK 
+    }
+    Set tSC = 1
+    // HTTP Request
+    #dim httprequest as %Net.HttpRequest
+    #dim httpResponse as %Net.HttpResponse
+    Try {
+        Set httprequest = ##class(%Net.HttpRequest).%New()
+        Do httprequest.ServerSet(..#SERVER)
+        Do httprequest.SSLConfigurationSet(..SSLConfig)
+        Set requestString = ..Feed_".json?before="_..LastPostName_"&limit="_..Limit
+        $$$TRACE(requestString)
+        Do httprequest.Get(requestString)
+        Set httpResponse = httprequest.HttpResponse
+        If (httpResponse.StatusCode '=200) {
+            $$$ThrowStatus($$$ERROR(5001, "HTTP StatusCode = "_httpResponse.StatusCode))
+        } 
+        Set jo = {}.%FromJSON(httpResponse.Data)
+        Set iter = jo.data.children.%GetIterator()
+        Set updateLast = 0
+        While iter.%GetNext(.key , .value ) {
+            If (value.data.selftext="") { Continue }            
+            Set post = ##class(dc.Reddit.Post).%New()
+            $$$ThrowOnError(post.%JSONImport(value.data))
+            Set post.OriginalJSON = value.%ToJSON()
+            $$$ThrowOnError(post.%Save())
+            If ('updateLast) {
+                Set ..LastPostName = value.data.name
+                Set updateLast = 1
+            }
+            $$$ThrowOnError(..BusinessHost.ProcessInput(post))
+        }
+    } Catch ex {
+        Do ex.Log()
+        Set tSC = ex.AsStatus()
+    }
+    Set ..BusinessHost.%WaitForNextCallInterval=1
+    Quit tSC
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="dc.Reddit.Post">
+<Super>%Persistent,%JSON.Adaptor,%XML.Adaptor</Super>
+<TimeChanged>65972,48961.671937</TimeChanged>
+<TimeCreated>65972,48961.671937</TimeCreated>
+
+<Parameter name="%JSONIGNOREINVALIDFIELD">
+<Default>1</Default>
+</Parameter>
+
+<Property name="OriginalJSON">
+<Type>%String</Type>
+<Parameter name="%JSONINCLUDE" value="none"/>
+<Parameter name="MAXLEN" value="3000000"/>
+</Property>
+
+<Property name="Title">
+<Type>%String</Type>
+<Parameter name="%JSONFIELDNAME" value="title"/>
+<Parameter name="MAXLEN" value="255"/>
+</Property>
+
+<Property name="Selftext">
+<Type>%String</Type>
+<Parameter name="%JSONFIELDNAME" value="selftext"/>
+<Parameter name="MAXLEN" value="3000000"/>
+</Property>
+
+<Property name="Author">
+<Type>%String</Type>
+<Parameter name="%JSONFIELDNAME" value="author"/>
+<Parameter name="MAXLEN" value="255"/>
+</Property>
+
+<Property name="Url">
+<Type>%String</Type>
+<Parameter name="%JSONFIELDNAME" value="url"/>
+<Parameter name="MAXLEN" value="255"/>
+</Property>
+
+<Property name="CreatedUTC">
+<Type>%Float</Type>
+<Parameter name="%JSONFIELDNAME" value="created_utc"/>
+</Property>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DataLocation>^dc.Reddit.PostD</DataLocation>
+<DefaultData>PostDefaultData</DefaultData>
+<IdLocation>^dc.Reddit.PostD</IdLocation>
+<IndexLocation>^dc.Reddit.PostI</IndexLocation>
+<StreamLocation>^dc.Reddit.PostS</StreamLocation>
+<Data name="PostDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>OriginalJSON</Value>
+</Value>
+<Value name="3">
+<Value>selftext</Value>
+</Value>
+<Value name="4">
+<Value>title</Value>
+</Value>
+<Value name="5">
+<Value>author</Value>
+</Value>
+<Value name="6">
+<Value>url</Value>
+</Value>
+<Value name="7">
+<Value>created_utc</Value>
+</Value>
+<Value name="8">
+<Value>Title</Value>
+</Value>
+<Value name="9">
+<Value>Selftext</Value>
+</Value>
+<Value name="10">
+<Value>Author</Value>
+</Value>
+<Value name="11">
+<Value>Url</Value>
+</Value>
+<Value name="12">
+<Value>CreatedUTC</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Document name="EnsExportNotes.EnsExportProduction_2021-09-01 15-15-14_679+0.PTD"><ProjectTextDocument name="EnsExportNotes.EnsExportProduction_2021-09-01 15-15-14_679+0" description="Export Notes for export EnsExportProduction_2021-09-01 15-15-14_679+0">
+<![CDATA[<Deployment>
+<Creation>
+<Machine>8AB1D42C5057</Machine>
+<Instance>IRIS</Instance>
+<Namespace>MYPLDEV</Namespace>
+<SourceProduction>MYPLDEVPKG.FoundationProduction</SourceProduction>
+<Username>WafikMA_IRIS</Username>
+<UTC>2021-09-01 15:22:14.181</UTC>
+</Creation>
+<Notes>
+</Notes>
+<Contents>
+<ExportProject>EnsExportProduction_2021-09-01 15-15-14_679+0</ExportProject>
+<Item num="1">AmazonSQS.Processus.CLS</Item>
+<Item num="2">AmazonSQS.Service.CLS</Item>
+<Item num="3">Grongier.AmazonSQS.Message.CLS</Item>
+<Item num="4">Grongier.AmazonSQS.Operation.CLS</Item>
+<Item num="5">Grongier.AmazonSQS.OutboundAdapter.CLS</Item>
+<Item num="6">Settings:AmazonSQS.Processus.PTD</Item>
+<Item num="7">Settings:AmazonSQS.Service.PTD</Item>
+<Item num="8">Settings:FilterPosts.PTD</Item>
+<Item num="9">Settings:Grongier.AmazonSQS.Operation.PTD</Item>
+<Item num="10">Settings:dc.Demo.EmailOperation.PTD</Item>
+<Item num="11">Settings:dc.Demo.FileOperation.PTD</Item>
+<Item num="12">Settings:dc.Demo.RedditService.PTD</Item>
+<Item num="13">dc.Demo.EmailOperation.CLS</Item>
+<Item num="14">dc.Demo.FileOperation.CLS</Item>
+<Item num="15">dc.Demo.FilterPostsRoutingRule.CLS</Item>
+<Item num="16">dc.Demo.PostMessage.CLS</Item>
+<Item num="17">dc.Demo.RedditService.CLS</Item>
+<Item num="18">dc.Reddit.InboundAdapter.CLS</Item>
+<Item num="19">dc.Reddit.Post.CLS</Item>
+</Contents>
+<ProductionClassInExport></ProductionClassInExport>
+</Deployment>
+
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:AmazonSQS.Processus.PTD"><ProjectTextDocument name="Settings:AmazonSQS.Processus" description="Settings for AmazonSQS.Processus in Production MYPLDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="AmazonSQS.Processus" Category="" ClassName="AmazonSQS.Processus" PoolSize="1" Enabled="false" Foreground="false" Comment="" LogTraceEvents="false" Schedule=""></Item>
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:AmazonSQS.Service.PTD"><ProjectTextDocument name="Settings:AmazonSQS.Service" description="Settings for AmazonSQS.Service in Production MYPLDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="AmazonSQS.Service" Category="" ClassName="AmazonSQS.Service" PoolSize="1" Enabled="false" Foreground="false" Comment="" LogTraceEvents="false" Schedule=""></Item>
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:FilterPosts.PTD"><ProjectTextDocument name="Settings:FilterPosts" description="Settings for FilterPosts in Production MYPLDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="FilterPosts" Category="" ClassName="EnsLib.MsgRouter.RoutingEngine" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule=""><Setting Target="Host" Name="BusinessRuleName">dc.Demo.FilterPostsRoutingRule</Setting></Item>
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:Grongier.AmazonSQS.Operation.PTD"><ProjectTextDocument name="Settings:Grongier.AmazonSQS.Operation" description="Settings for Grongier.AmazonSQS.Operation in Production MYPLDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="Grongier.AmazonSQS.Operation" Category="" ClassName="Grongier.AmazonSQS.Operation" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule=""><Setting Target="Adapter" Name="SQSCredentials">cred</Setting><Setting Target="Adapter" Name="Queue">MYPL_SQS_QUEUE</Setting><Setting Target="Adapter" Name="Region">eu-west-1</Setting></Item>
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:dc.Demo.EmailOperation.PTD"><ProjectTextDocument name="Settings:dc.Demo.EmailOperation" description="Settings for dc.Demo.EmailOperation in Production MYPLDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="dc.Demo.EmailOperation" Category="" ClassName="dc.Demo.EmailOperation" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule=""><Setting Target="Adapter" Name="SMTPPort"></Setting><Setting Target="Adapter" Name="SMTPServer"></Setting><Setting Target="Adapter" Name="SSLConfig"></Setting><Setting Target="Adapter" Name="From"></Setting><Setting Target="Adapter" Name="Credentials"></Setting></Item>
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:dc.Demo.FileOperation.PTD"><ProjectTextDocument name="Settings:dc.Demo.FileOperation" description="Settings for dc.Demo.FileOperation in Production MYPLDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="dc.Demo.FileOperation" Category="" ClassName="dc.Demo.FileOperation" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule=""><Setting Target="Adapter" Name="Charset">utf-8</Setting><Setting Target="Adapter" Name="FilePath">/irisdev/app/output/</Setting></Item>
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:dc.Demo.RedditService.PTD"><ProjectTextDocument name="Settings:dc.Demo.RedditService" description="Settings for dc.Demo.RedditService in Production MYPLDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="dc.Demo.RedditService" Category="" ClassName="dc.Demo.RedditService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule=""><Setting Target="Adapter" Name="Feed">/new/</Setting><Setting Target="Adapter" Name="SSLConfig">default</Setting><Setting Target="Adapter" Name="CallInterval">15</Setting><Setting Target="Adapter" Name="Limit">50</Setting></Item>
+]]></ProjectTextDocument>
+</Document></Export>
