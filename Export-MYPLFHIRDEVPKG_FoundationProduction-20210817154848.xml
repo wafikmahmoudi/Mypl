@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2020.4 (Build 538U)" ts="2021-08-17 15:49:01">
+<Project name="EnsExportProduction_2021-08-17 15-48-48_438+0" LastModified="2021-08-17 15:49:01.130859">
+  <ProjectDescription>Studio Project generated from Production 'MYPLFHIRDEVPKG.FoundationProduction' at 2021-08-17 15:48:48.438 UTC</ProjectDescription>
+  <Items>
+    <ProjectItem name="FHIRHL7V2DEMOPKG.hprimToHl7test" type="CLS"></ProjectItem>
+    <ProjectItem name="EnsExportNotes.EnsExportProduction_2021-08-17 15-48-48_438+0.PTD" type="PTD"></ProjectItem>
+  </Items>
+</Project>
+
+
+<Class name="FHIRHL7V2DEMOPKG.hprimToHl7test">
+<Super>Ens.DataTransformDTL</Super>
+<TimeChanged>65891,49924.431277</TimeChanged>
+<TimeCreated>65890,40647.336236</TimeCreated>
+<DependsOn>FHIRHL7V2DEMOPKG.RecordMapComplexeAdicap.Batch,EnsLib.HL7.Message</DependsOn>
+
+<Parameter name="IGNOREMISSINGSOURCE">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="REPORTERRORS">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="TREATEMPTYREPEATINGFIELDASNULL">
+<Default>0</Default>
+</Parameter>
+
+<XData name="DTL">
+<XMLNamespace>http://www.intersystems.com/dtl</XMLNamespace>
+<Data><![CDATA[
+<transform sourceClass='FHIRHL7V2DEMOPKG.RecordMapComplexeAdicap.Batch' targetClass='EnsLib.HL7.Message' targetDocType='2.5:ORU_R01' create='new' language='objectscript' >
+<assign value='source' property='target' action='set' disabled='1' />
+<assign value='source.H.DefSeparateur' property='target.{MSH:EncodingCharacters}' action='set' />
+<assign value='"1.2.250.1.247.2.13.800000044.7.1.1"' property='target.{MSH:SendingApplication.NamespaceID}' action='set' />
+<assign value='source.H.codificationEmmeteur.Codification' property='target.{MSH:SendingApplication.UniversalID}' action='set' />
+<assign value='"TRIGRAMME Hôpital"' property='target.{MSH:ReceivingApplication.NamespaceID}' action='set' />
+<assign value='"IDEO"' property='target.{MSH:ReceivingFacility.NamespaceID}' action='set' />
+<assign value='source.H.DateMessage' property='target.{MSH:DateTimeOfMessage.Time}' action='set' />
+<assign value='source.H.Typemessage' property='target.{MSH:MessageType.MessageCode}' action='set' />
+<assign value='"RO1"' property='target.{MSH:MessageType.TriggerEvent}' action='set' />
+<assign value='"ORU_R01"' property='target.{MSH:MessageType.MessageStructure}' action='set' disabled='1' />
+<assign value='"92522501_EH10_202"' property='target.{MSH:MessageControlID}' action='set' />
+<assign value='source.H.ModeTraitement' property='target.{MSH:ProcessingID.ProcessingID}' action='set' />
+<assign value='"2.3"' property='target.{MSH:VersionID.VersionID}' action='set' />
+<assign value='"FRA"' property='target.{MSH:CountryCode}' action='set' />
+<assign value='"FR"' property='target.{MSH:PrincipalLanguageOfMessage.Identifier}' action='set' />
+<assign value='source.p.Rang' property='target.{PIDgrpgrp(1).PIDgrp.PID:SetIDPID}' action='set' />
+<assign value='source.p.IdPatient' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientID.IDNumber}' action='set' />
+<assign value='source.p.NDApatient' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientIdentifierList(1).IDNumber}' action='set' />
+<assign value='"1.2.250.1.192.10.1"' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientIdentifierList(1).AssigningAuthority.UniversalID}' action='set' />
+<assign value='"ISO"' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientIdentifierList(1).AssigningAuthority.UniversalIDType}' action='set' />
+<assign value='"PI"' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientIdentifierList(1).IdentifierTypeCode}' action='set' />
+<assign value='source.p.NomPatient.Nom' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientName(1).FamilyName}' action='set' />
+<assign value='source.p.NomPatient.Prenom1' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientName(1).GivenName}' action='set' />
+<assign value='source.p.NomPatient.Civilite' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientName(1).Prefix}' action='set' />
+<assign value='source.p.NomJeuneFille' property='target.{PIDgrpgrp(1).PIDgrp.PID:MothersMaidenName()}' action='set' />
+<assign value='source.p.DateNaissance' property='target.{PIDgrpgrp(1).PIDgrp.PID:DateTimeofBirth.Time}' action='set' />
+<assign value='source.p.Sexe' property='target.{PIDgrpgrp(1).PIDgrp.PID:AdministrativeSex}' action='set' />
+<assign value='"2 RUE DE PARIS"' property='target.{PIDgrpgrp(1).PIDgrp.PID:PatientAddress(1).StreetAddress.StreetorMailingAddress}' action='set' />
+<assign value='"S"' property='target.{PIDgrpgrp(1).PIDgrp.PID:MaritalStatus.Identifier}' action='set' />
+<assign value='"FRA"' property='target.{PIDgrpgrp(1).PIDgrp.PID:Citizenship(1).Identifier}' action='set' />
+<assign value='"PROV"' property='target.{PIDgrpgrp(1).PIDgrp.PID:IdentityReliabilityCode(1)}' action='set' />
+<assign value='"1"' property='target.{PIDgrpgrp(1).PIDgrp.PV1grp.PV1:SetIDPV1}' action='set' />
+<assign value='"I"' property='target.{PIDgrpgrp(1).PIDgrp.PV1grp.PV1:PatientClass}' action='set' />
+<assign value='"103919850"' property='target.{PIDgrpgrp(1).PIDgrp.PV1grp.PV1:VisitNumber.IDNumber}' action='set' />
+<assign value='"RE"' property='target.{PIDgrpgrp(1).ORCgrp(1).ORC:OrderControl}' action='set' />
+<assign value='"20050221130000"' property='target.{PIDgrpgrp(1).ORCgrp(1).ORC:DateTimeofTransaction.Time}' action='set' />
+<assign value='source.OBR.Rang' property='target.{PIDgrpgrp(1).ORCgrp(1).OBR:SetIDOBR}' action='set' />
+<assign value='source.OBR.Idechantillon.IdResult' property='target.{PIDgrpgrp(1).ORCgrp(1).OBR:PlacerOrderNumber.EntityIdentifier}' action='set' />
+<assign value='source.OBR.IdDemande' property='target.{PIDgrpgrp(1).ORCgrp(1).OBR:FillerOrderNumber.EntityIdentifier}' action='set' />
+<assign value='source.OBR.DatePriseCompe' property='target.{PIDgrpgrp(1).ORCgrp(1).OBR:RequestedDateTime.Time}' action='set' />
+<assign value='source.OBR.DateActe' property='target.{PIDgrpgrp(1).ORCgrp(1).OBR:ObservationDateTime.Time}' action='set' />
+<assign value='source.OBR.DateReceptionEchantillon' property='target.{PIDgrpgrp(1).ORCgrp(1).OBR:SpecimenReceivedDateTime.Time}' action='set' />
+<foreach property='source.OBX()' key='k1' >
+<assign value='source.OBX.(k1).Rang' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:SetIDOBX}' action='set' />
+<assign value='source.OBX.(k1).TypeResult' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:ValueType}' action='set' />
+<assign value='source.OBX.(k1).test.Code' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:ObservationIdentifier.Identifier}' action='set' />
+<assign value='source.OBX.(k1).test.Libelle' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:ObservationIdentifier.Text}' action='set' />
+<assign value='source.OBX.(k1).Resultat' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:ObservationValue(1)}' action='set' />
+<assign value='source.OBX.(k1).SatutResult' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:ObservationResultStatus}' action='set' />
+<assign value='source.OBX.(k1).dateObservation' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:DateTimeoftheObservation.Time}' action='set' />
+<assign value='source.OBX.(k1).Valideur.Code' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:ResponsibleObserver(1).IDNumber}' action='set' />
+<assign value='source.OBX.(k1).Valideur.Nom' property='target.{PIDgrpgrp(k1).ORCgrp(1).OBXgrp(1).OBX:ResponsibleObserver().FamilyName}' action='set' />
+</foreach>
+</transform>
+]]></Data>
+</XData>
+</Class>
+
+
+<Document name="EnsExportNotes.EnsExportProduction_2021-08-17 15-48-48_438+0.PTD"><ProjectTextDocument name="EnsExportNotes.EnsExportProduction_2021-08-17 15-48-48_438+0" description="Export Notes for export EnsExportProduction_2021-08-17 15-48-48_438+0">
+<![CDATA[<Deployment>
+<Creation>
+<Machine>8692B1104CF4</Machine>
+<Instance>IRIS</Instance>
+<Namespace>MYPLFHIRDEV</Namespace>
+<SourceProduction>MYPLFHIRDEVPKG.FoundationProduction</SourceProduction>
+<Username>WMA_IRIS</Username>
+<UTC>2021-08-17 15:49:01.129</UTC>
+</Creation>
+<Notes>
+</Notes>
+<Contents>
+<ExportProject>EnsExportProduction_2021-08-17 15-48-48_438+0</ExportProject>
+<Item num="1">FHIRHL7V2DEMOPKG.hprimToHl7test.CLS</Item>
+</Contents>
+<ProductionClassInExport></ProductionClassInExport>
+</Deployment>
+
+]]></ProjectTextDocument>
+</Document></Export>

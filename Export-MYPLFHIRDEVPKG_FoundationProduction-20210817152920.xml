@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2020.4 (Build 538U)" ts="2021-08-17 15:31:05">
+<Project name="EnsExportProduction_2021-08-17 15-29-16_395+0" LastModified="2021-08-17 15:31:05.678337">
+  <ProjectDescription>Studio Project generated from Production 'MYPLFHIRDEVPKG.FoundationProduction' at 2021-08-17 15:29:16.395 UTC</ProjectDescription>
+  <Items>
+    <ProjectItem name="FHIRHL7V2DEMOPKG.AdicapRouteurRoutingRule" type="CLS"></ProjectItem>
+    <ProjectItem name="User.bplORUtoFHIR" type="CLS"></ProjectItem>
+    <ProjectItem name="Settings:AdicapRouteur.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="Settings:HprimAdicap.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="Settings:User.bplORUtoFHIR.PTD" type="PTD"></ProjectItem>
+    <ProjectItem name="EnsExportNotes.EnsExportProduction_2021-08-17 15-29-16_395+0.PTD" type="PTD"></ProjectItem>
+  </Items>
+</Project>
+
+
+<Class name="FHIRHL7V2DEMOPKG.AdicapRouteurRoutingRule">
+<Description>
+</Description>
+<Super>Ens.Rule.Definition</Super>
+<TimeChanged>65891,43285.618413</TimeChanged>
+<TimeCreated>65827,50107.231595</TimeCreated>
+
+<Parameter name="RuleAssistClass">
+<Default>EnsLib.MsgRouter.RuleAssist</Default>
+</Parameter>
+
+<XData name="RuleDefinition">
+<XMLNamespace>http://www.intersystems.com/rule</XMLNamespace>
+<Data><![CDATA[
+<ruleDefinition alias="" context="EnsLib.MsgRouter.RoutingEngine" production="FHIRHL7V2DEMOPKG.FoundationProduction">
+<ruleSet name="" effectiveBegin="" effectiveEnd="">
+<rule name="" disabled="true">
+<constraint name="source" value="InputOru"></constraint>
+<when condition="1">
+<send transform="FHIRHL7V2DEMOPKG.AdicapORUFHIR" target="TestORUtoFHIR"></send>
+<return></return>
+</when>
+</rule>
+<rule name="" disabled="true">
+<constraint name="source" value="InputOru2"></constraint>
+<when condition="1">
+<send transform="FHIRHL7V2DEMOPKG.AdicapORU" target="MessageOru_OUT"></send>
+<return></return>
+</when>
+</rule>
+<rule name="" disabled="false">
+<constraint name="source" value="HprimAdicap"></constraint>
+<when condition="1">
+<send transform="FHIRHL7V2DEMOPKG.hprimToHl7test" target="User.bplORUtoFHIR"></send>
+<return></return>
+</when>
+</rule>
+</ruleSet>
+</ruleDefinition>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="User.bplORUtoFHIR">
+<Description>
+</Description>
+<Super>Ens.BusinessProcessBPL</Super>
+<TimeChanged>65903,55068.496567</TimeChanged>
+<TimeCreated>65891,42597.182034</TimeCreated>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+</Storage>
+
+<XData name="BPL">
+<Description>
+BPL Definition</Description>
+<XMLNamespace>http://www.intersystems.com/bpl</XMLNamespace>
+<Data><![CDATA[
+<process language='objectscript' request='EnsLib.HL7.Message' response='Ens.Response' height='2000' width='2000' >
+<context>
+<property name='messageinputHL7' type='EnsLib.HL7.Message' instantiate='0' />
+<property name='Tstream' type='Ens.StreamContainer' instantiate='0' />
+<property name='xxl2' type='EnsLib.EDI.XML.Document' instantiate='0' />
+<property name='BStream' type='HS.Message.XMLMessage' instantiate='0' />
+</context>
+<sequence xend='200' yend='650' >
+<code xpos='200' ypos='250' >
+<![CDATA[  $$$LOGINFO("wafik")]]]]><![CDATA[>
+</code>
+<transform class='DTLtest.test26052021' source='request' target='context.Tstream' xpos='200' ypos='350' />
+<code xpos='200' ypos='450' >
+<![CDATA[ 	
+ 		$$$LOGINFO("eeeeeeeeeeeeeeeeeeeeeeee")
+ 	set tSDA3Object = context.Tstream
+ 	Set tQuickStream = ##class(HS.SDA3.QuickStream).%New()
+	
+	$$$ThrowOnError(tSDA3Object.XMLExportToStream(.tQuickStream))
+
+	$$$LOGINFO("tQuickStream"_tQuickStream.Read())
+         $$$LOGINFO(" idpatient " _^idGlobal)
+         $$$LOGINFO(" idObservation " _^idObservation)
+       set pResponsewafik = ##class(HS.Message.XMLMessage).%New()
+       Do pResponsewafik.AdditionalInfo.SetAt(tQuickStream.%Id(),"QuickStreamId")
+       	//set non = tSDA3Object.Patient.Name.FamilyName
+        //$$$LOGINFO(non)
+         //set numeropatient = tSDA3Object.Patient.PatientNumbers.PatientNumber.Number
+            //set numeroObservation=tSDA3Object.Observations.Observation.ExternalId
+            
+       Do pResponsewafik.AdditionalInfo.SetAt(^idGlobal,"PatientResourceId")
+       // Observation
+       //Do pResponsewafik.AdditionalInfo.SetAt(^idObservation,"numeroObservation")
+		//wafik ajout
+       set context.xxl2 = ##class(EnsLib.EDI.XML.Document).%New(tQuickStream)
+       ////////////////////// partie 2
+       
+        $$$LOGINFO(" tstream")
+        
+  $$$LOGINFO(context.Tstream)
+  $$$LOGINFO(" Ens.Request")
+  $$$LOGINFO(request)
+  Set context.Tstream= request
+   $$$LOGINFO(" tstream")
+  $$$LOGINFO(context.Tstream)
+  set pXML=##class(%Stream.GlobalCharacter).%New()
+  do pXML.Write(context.BStream)
+  $$$LOGINFO("SDAAAAAAAAAAA / : ")
+  set text = ""
+  do pXML.Rewind()
+  while 'pXML.AtEnd {
+  set text = pXML.Read()
+  }
+  // w text
+  $$$LOGINFO("SDA Stream for sdaaaaaaaaaa is created : "_text)
+    $$$LOGINFO("pResponsewafik : "_tQuickStream.Read())]]]]><![CDATA[>
+</code>
+<call name='gbgf' target='HS.FHIR.DTL.Util.HC.SDA3.FHIR.Process' async='1' xpos='200' ypos='550' >
+<request type='Ens.StreamContainer' >
+<assign property="callrequest" value="pResponsewafik" action="set" />
+</request>
+<response type='Ens.Response' />
+</call>
+</sequence>
+</process>
+]]></Data>
+</XData>
+</Class>
+
+
+<Document name="EnsExportNotes.EnsExportProduction_2021-08-17 15-29-16_395+0.PTD"><ProjectTextDocument name="EnsExportNotes.EnsExportProduction_2021-08-17 15-29-16_395+0" description="Export Notes for export EnsExportProduction_2021-08-17 15-29-16_395+0">
+<![CDATA[<Deployment>
+<Creation>
+<Machine>8692B1104CF4</Machine>
+<Instance>IRIS</Instance>
+<Namespace>MYPLFHIRDEV</Namespace>
+<SourceProduction>MYPLFHIRDEVPKG.FoundationProduction</SourceProduction>
+<Username>WMA_IRIS</Username>
+<UTC>2021-08-17 15:31:05.676</UTC>
+</Creation>
+<Notes>
+</Notes>
+<Contents>
+<ExportProject>EnsExportProduction_2021-08-17 15-29-16_395+0</ExportProject>
+<Item num="1">FHIRHL7V2DEMOPKG.AdicapRouteurRoutingRule.CLS</Item>
+<Item num="2">Settings:AdicapRouteur.PTD</Item>
+<Item num="3">Settings:HprimAdicap.PTD</Item>
+<Item num="4">Settings:User.bplORUtoFHIR.PTD</Item>
+<Item num="5">User.bplORUtoFHIR.CLS</Item>
+</Contents>
+<ProductionClassInExport></ProductionClassInExport>
+</Deployment>
+
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:AdicapRouteur.PTD"><ProjectTextDocument name="Settings:AdicapRouteur" description="Settings for AdicapRouteur in Production MYPLFHIRDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="AdicapRouteur" Category="" ClassName="EnsLib.MsgRouter.RoutingEngine" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule=""><Setting Target="Host" Name="BusinessRuleName">FHIRHL7V2DEMOPKG.AdicapRouteurRoutingRule</Setting></Item>
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:HprimAdicap.PTD"><ProjectTextDocument name="Settings:HprimAdicap" description="Settings for HprimAdicap in Production MYPLFHIRDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="HprimAdicap" Category="" ClassName="EnsLib.RecordMap.Service.ComplexBatchFileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule=""><Setting Target="Adapter" Name="FilePath">/dur/SouhirJA/</Setting><Setting Target="Adapter" Name="FileSpec">*.HPR</Setting><Setting Target="Host" Name="ComplexMap">FHIRHL7V2DEMOPKG.RecordMapComplexeAdicap</Setting><Setting Target="Host" Name="TargetConfigNames">AdicapRouteur</Setting></Item>
+]]></ProjectTextDocument>
+</Document>
+
+<Document name="Settings:User.bplORUtoFHIR.PTD"><ProjectTextDocument name="Settings:User.bplORUtoFHIR" description="Settings for User.bplORUtoFHIR in Production MYPLFHIRDEVPKG.FoundationProduction">
+<![CDATA[<Item Name="User.bplORUtoFHIR" Category="" ClassName="User.bplORUtoFHIR" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule=""></Item>
+]]></ProjectTextDocument>
+</Document></Export>

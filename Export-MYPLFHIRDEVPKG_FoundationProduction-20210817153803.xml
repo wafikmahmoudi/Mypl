@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2020.4 (Build 538U)" ts="2021-08-17 15:38:16">
+<Class name="DTLtest.test26052021">
+<Super>Ens.DataTransformDTL</Super>
+<TimeChanged>65903,36943.295154</TimeChanged>
+<TimeCreated>65890,50590.375701</TimeCreated>
+<DependsOn>EnsLib.HL7.Message,HS.SDA3.Container</DependsOn>
+
+<Parameter name="IGNOREMISSINGSOURCE">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="REPORTERRORS">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="TREATEMPTYREPEATINGFIELDASNULL">
+<Default>0</Default>
+</Parameter>
+
+<XData name="DTL">
+<XMLNamespace>http://www.intersystems.com/dtl</XMLNamespace>
+<Data><![CDATA[
+<transform sourceClass='EnsLib.HL7.Message' targetClass='HS.SDA3.Container' sourceDocType='2.5:ORU_R01' create='new' language='objectscript' >
+<foreach property='source.{PIDgrpgrp()}' key='k1' >
+<subtransform class='HS.Hub.Standalone.HL7.DTL.SubTransform.PIDToSDA3' targetObj='target' sourceObj='source.{PIDgrpgrp(k1).PIDgrp.PID}' aux='source.{MSH:SendingFacility.NamespaceID}' />
+<subtransform class='HS.Hub.Standalone.HL7.DTL.SubTransform.PD1ToSDA3' targetObj='target' sourceObj='source.{PIDgrpgrp(k1).PIDgrp.PD1}' />
+<foreach property='source.{PIDgrpgrp(k1).ORCgrp()}' key='k2' >
+<foreach property='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp()}' key='k3' >
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBR:PlacerOrderNumber.EntityIdentifier}' property='target.Observations.(k3).EncounterNumber' action='set' disabled='1' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBR:UniversalServiceIdentifier.Text}' property='target.Observations.(k3).Clinician.Description' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:DateTimeoftheObservation.Time}' property='target.Observations.(k3).ObservationTime' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:DateTimeoftheObservation}' property='dd' action='set' />
+<if condition='dd = ""' >
+<true>
+<assign value='""' property='t' action='set' />
+</true>
+<false>
+<code>
+<![CDATA[  set an = $EXTRACT(dd,1,4)
+  set mm = $EXTRACT(dd,5,6)
+   set jj = $EXTRACT(dd,7,8)
+    set hh = $EXTRACT(dd,9,10)
+    set min = $EXTRACT(dd,11,12)
+     set ss = $EXTRACT(dd,13,14)
+     set t = an_"-"_mm_"-"_jj_"T"_hh_":"_min_":"_ss]]]]><![CDATA[></code>
+</false>
+</if>
+<assign value='t' property='target.Observations.(k3).EnteredOn' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:DateTimeoftheObservation}' property='target.Observations.(k3).FromTime' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:ObservationIdentifier.Identifier}' property='target.Observations.(k3).ObservationCode.EId' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:ObservationIdentifier.Text}' property='target.Observations.(k3).ObservationCode.OriginalText' action='set' disabled='1' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:ObservationIdentifier.Identifier}' property='target.Observations.(k3).ObservationCode.Code' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:ObservationValue()}' property='target.Observations.(k3).ObservationValue' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:ValueType}' property='target.Observations.(k3).ObservationValueType' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:Units.Identifier}' property='target.Observations.(k3).ObservationCode.ObservationValueUnits.Code' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:Units.Text}' property='target.Observations.(k3).ObservationCode.ObservationValueUnits.Description' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).OBX:ObservationResultStatus}' property='target.Observations.(k3).ActionCode' action='set' />
+<assign value='source.{PIDgrpgrp(k1).ORCgrp(k2).OBXgrp(k3).NTE():Comment()}' property='target.Observations.(k3).Comments' action='set' disabled='1' />
+</foreach>
+</foreach>
+</foreach>
+<assign value='source.{PIDgrpgrp(1).PIDgrp.PID:PatientID.IDNumber}' property='IdPatient' action='set' />
+<code>
+<![CDATA[  set ^idGlobal =IdPatient]]]]><![CDATA[></code>
+<assign value='"15"' property='target.Observations.(1).ExternalId' action='set' />
+<assign value='target.Observations.(1).ExternalId' property='IdObservation' action='set' />
+<code>
+<![CDATA[  set ^idObservation =IdObservation]]]]><![CDATA[></code>
+<assign value='123' property='target.Encounters.(1).EncounterNumber' action='set' disabled='1' />
+<assign value='123' property='target.ObservationGroups.(1).ActionCode' action='set' disabled='1' />
+</transform>
+]]></Data>
+</XData>
+</Class>
+
+
+<Project name="EnsExportProduction_2021-08-17 15-38-03_468+0" LastModified="2021-08-17 15:38:16.529706">
+  <ProjectDescription>Studio Project generated from Production 'MYPLFHIRDEVPKG.FoundationProduction' at 2021-08-17 15:38:03.468 UTC</ProjectDescription>
+  <Items>
+    <ProjectItem name="DTLtest.test26052021" type="CLS"></ProjectItem>
+    <ProjectItem name="EnsExportNotes.EnsExportProduction_2021-08-17 15-38-03_468+0.PTD" type="PTD"></ProjectItem>
+  </Items>
+</Project>
+
+
+<Document name="EnsExportNotes.EnsExportProduction_2021-08-17 15-38-03_468+0.PTD"><ProjectTextDocument name="EnsExportNotes.EnsExportProduction_2021-08-17 15-38-03_468+0" description="Export Notes for export EnsExportProduction_2021-08-17 15-38-03_468+0">
+<![CDATA[<Deployment>
+<Creation>
+<Machine>8692B1104CF4</Machine>
+<Instance>IRIS</Instance>
+<Namespace>MYPLFHIRDEV</Namespace>
+<SourceProduction>MYPLFHIRDEVPKG.FoundationProduction</SourceProduction>
+<Username>WMA_IRIS</Username>
+<UTC>2021-08-17 15:38:16.528</UTC>
+</Creation>
+<Notes>
+</Notes>
+<Contents>
+<ExportProject>EnsExportProduction_2021-08-17 15-38-03_468+0</ExportProject>
+<Item num="1">DTLtest.test26052021.CLS</Item>
+</Contents>
+<ProductionClassInExport></ProductionClassInExport>
+</Deployment>
+
+]]></ProjectTextDocument>
+</Document></Export>
